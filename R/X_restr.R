@@ -1,19 +1,20 @@
-X_restr <- function(X,R,r,p){
+X_restr <- function(X,R,b,p){
   # Function to fit beta restricted imposing the restrictions in matrix X
+  if(!is.matrix(b)) b <- matrix(b, ncol = 1)
   Rt <- t(R)
-  # Localizar coeficientes no nulos de Rt y r
+  # Localizar coeficientes no nulos de Rt y b
   Rt_nonull <- Rt != 0
-  rt_nonull <- r != 0
-  # Primer coeficiente no nulo de cada columna en Rt es variable referencia 
-  # (mantiene signo). El resto de los coeficientes no nulos de la columna 
+  rt_nonull <- b != 0
+  # Primer coeficiente no nulo de cada columna en Rt es variable referencia
+  # (mantiene signo). El resto de los coeficientes no nulos de la columna
   #cambiant signo
   Xstar <- X
   index_var_ref <- integer(ncol(Rt))
   index_var_del <- integer(ncol(Rt)) # All columns are deleted at the end...
   coef_var_ref <- rep(0,ncol(Rt))
   for (i in 1:ncol(Rt)) {
-   Rt_col <- Rt[,i] 
-   index_Rt_col <- which(Rt_col != 0) 
+   Rt_col <- Rt[,i]
+   index_Rt_col <- which(Rt_col != 0)
    nvar_Rt_col <- length(index_Rt_col)
    index_var_ref[i] <- index_Rt_col[1]
    coef_var_ref[i] <- Rt_col[index_var_ref[i]]
@@ -25,25 +26,30 @@ X_restr <- function(X,R,r,p){
    Rt_col_neg[index_var_ref[i]] <- coef_var_ref[i]
    newcolXstar <- Xstar %*% Rt_col_neg
    Xstar[,index_var_ref[i]] <- newcolXstar
-  } 
-  # Si r es no nulo cambia el intercepto
-  for (i in 1:nrow(r)) {
-    if (rt_nonull[i]) X_star[,1] <- X_star[,1]+r[i]*X[,index_var_ref[i]]
   }
-  # Elimina variables dependientes linealmente en Xstar y adapta p de cada ecuación
+  # Si b es no nulo cambia el intercepto
+  for (i in 1:nrow(b)) {
+    if (rt_nonull[i]) X_star[,1] <- X_star[,1]+b[i]*X[,index_var_ref[i]]
+  }
+  # Elimina variables dependientes linealmente en Xstar 
+  # y adapta p de cada ecuación
   Xstar <- Xstar[,-c(index_var_del)]
   colnames(Xstar) <- colnames(X)[-c(index_var_del)]
-  pstar <- p
-  for (i in 1:length(index_var_del))
-  {
-    index_pstar_i <- which(index_var_del[i] < cumsum(p))[1]
-    pstar[index_pstar_i] <- pstar[index_pstar_i] - 1 
+  pstar <- rep(0, length(p))
+  for (i in 1:length(pstar)) {
+    pattern_i <- paste("_",i,sep="")
+    pstar[i] <- sum(grepl(pattern_i, colnames(Xstar)))
   }
+  # for (i in 1:length(index_var_del))
+  # {
+  #   index_pstar_i <- which(index_var_del[i] <= cumsum(p))[1]
+  #   pstar[index_pstar_i] <- pstar[index_pstar_i] - 1
+  # }
   res <- list(Xstar = Xstar, pstar = pstar)
-  return (res) 
-}  
-  # CÓDIGO ANTIGUO 
-  #   
+  return (res)
+}
+  # CÓDIGO ANTIGUO
+  #
   #   for (j in 1:nrow(Rt)) {
   #     if (Rt_nonull[j,i]) {
   #       var_ref[i] <- j
@@ -55,10 +61,10 @@ X_restr <- function(X,R,r,p){
   #     }
   #   }
   # }
-  # 
-  # 
-  # 
-  # # Último coeficiente de cada columna en Rt es variable a eliminar 
+  #
+  #
+  #
+  # # Último coeficiente de cada columna en Rt es variable a eliminar
   # # (hay un parámetro menos por cada restricción impuesta)
   # var_del <- integer(ncol(Rt))
   # for (i in 1:ncol(Rt)) {
@@ -71,19 +77,19 @@ X_restr <- function(X,R,r,p){
   #       # } else break
   #     }
   #   }
-  # }  
-  # 
+  # }
+  #
   # # Chequeo para comprobar la compatibilidad de las variables elegidas
   # for (i in 1:ncol(Rt)) {
   #   if (var_ref[i]==var_del[i]) stop("Restrictions can not be substituted in matrix X")
-  # }  
-  # 
-  # 
-  # 
+  # }
+  #
+  #
+  #
   # # Cambia el signo de todos los coeficientes excepto las variables de referencia
   # Rt_star <- Rt*(-1)
   # for (i in 1:length(var_ref)) Rt_star[var_ref[i],i] <- coef_var_ref[i]
-  # 
+  #
   # # Creación variables restringidas
   # X_star <- X
   # for (i in 1:ncol(Rt_star)) {
@@ -91,8 +97,8 @@ X_restr <- function(X,R,r,p){
   #   X_star[,var_ref[i]] <- xnew_star
   # }
   # X_star <- X_star[,-c(var_del)]
-  # 
-  # # Si r es no nulo cambia el intercepto
-  # for (i in 1:nrow(r)) {
-  #   if (rt_nonull[i]) X_star[,1] <- X_star[,1]+r[i]*X[,var_ref[i]]
+  #
+  # # Si b es no nulo cambia el intercepto
+  # for (i in 1:nrow(b)) {
+  #   if (rt_nonull[i]) X_star[,1] <- X_star[,1]+b[i]*X[,var_ref[i]]
   # }

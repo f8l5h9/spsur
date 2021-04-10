@@ -1,90 +1,226 @@
-#' @name spSUR-package
-#' @rdname spSUR-package
+#' @docType package
+#' @name spsur-package
+#' @rdname spsur-package
 #'
-#' @title Spatial Seemingly Unrelated Regression Models
+#' @title Spatial Seemingly Unrelated Regression Models.
 #'
 #' @description
-#' A collection of functions to test and estimate Spatial Seemingly Unrelated Regression (SUR) models by maximum
-#' likelihood and three-stage least square the ussual SUR especifications with spatial effects
-#' (SUR-SLX; SUR-SAR; SUR-SEM; SUR-SDM; SUR-SDEM and SUR-SARAR) and non spatial SUR model (SUR-SIM)\cr
+#'  \pkg{spsur} offers the user a collection of functions to estimate Spatial 
+#'   Seemingly Unrelated Regression (SUR) models by maximum likelihood or 
+#'   three-stage least squares, using spatial instrumental variables. 
+#'   Moreover, \pkg{spsur} obtains a collection of misspecification
+#'   tests for omitted or wrongly specified spatial structure. The user will 
+#'   find spatial models more popular in applied research such as the SUR-SLX, 
+#'   SUR-SLM, SUR-SEM, SUR-SDM, SUR-SDEM SUR-SARAR and SUR-GNM 
+#'   plus the spatially independent SUR, or SUR-SIM.
 #'
 #' @details
-#' Three functionalities have the \link[pkg]{spSUR} package:
+#'  Some functionalities that have been included in \pkg{spsur} package are:
 #'
 #' @section 1. Testing for spatial effects:
+#'   The function \code{\link{lmtestspsur}} provides a collection of 
+#'   Lagrange Multipliers, LM, for testing different forms of spatial 
+#'   dependence in SUR models. They are extended versions of
+#'   the well-known LM tests for omitted lags of the explained variable in 
+#'   the right hand side of the equation, LM-SLM, the LM tests for omitted 
+#'   spatial errors, LM-SEM, the join test of omitted spatial lags and 
+#'   spatial errors, LM-SARAR, and the robust version of the firt
+#'   two Lagrange Multipliers, LM*-SLM  and LM*-SEM. \cr
+#'   These tests can be applied to models always with a SUR nature. Roughly, 
+#'   we may distinguish two situations:
+#'   \itemize{
+#'    \item Datasets with a single equation \emph{G=1}, for different time 
+#'    periods \emph{Tm>1} and a certain number of spatial units in the 
+#'    cross-sectional dimension, \emph{N}. This is what we call
+#'    \emph{spatial panel datasets}. In this case, the SUR structure appears 
+#'    in form of (intra) serial dependence in the errors of each spatial unit.
+#'    \item Datasets with a several equations \emph{G>1}, different time 
+#'    periods \emph{Tm>1} and a certain number of spatial units, \emph{N}. 
+#'    The SUR structure appears, as usual, because the errors
+#'    of the spatial units for different equations are contemporaneously 
+#'    correlated.
+#'   }
 #'
-#' The function \code{\link{lmtestspsur}} give five statistis for testing spatial dependence in Semmingly Unrelated Regression
-#' models (SUR). The five statistics are based on Lagrangian Multipliers principe (SUR-LM-).
-#' The statistics are similar to the LM tests of spatial autocorrelation for a single equation
-#' (see \code{\link[spdep]{lm.LMtests}} in package \link[pkg]{spdep}).
-#' The tests can be applied to a data set with nG>1 equations for one cross sectional data set (nR>1) in the same
-#' time period (nT=1) or in a panel data framework. Two alternatives in panel: nT>1 time periods for the same cross
-#' section (nR>1) assuming temporal correlation in residuals or nG>1 equations in nT>1 time
-#' periods assuming correlation only in residuals of nG equations.\cr
 #'
 #' @section 2. Estimation of the Spatial SUR models:
-#' Two alternative estimation methods are implemented
-#' \cr
-#' @section 2.1. Maximum likelihood estimation:
-#' Maximum likelihood estimation for differents spatial SUR models using \code{\link{spsurml}}
-#' . The models are:
-#' SUR-SIM: SUR model without spatial effects\cr
-#' \deqn{y_{gt} = y_{gt} + X_{gt} \beta_{g} + \epsilon_{gt}}
-#' SUR-SLX: \cr
-#' \deqn{y_{gt} = y_{gt} + X_{gt} \beta_{g} + WX_{gt} \theta_{g} + \epsilon_{gt}}
-#' SUR-SAR: Spatial autorregresive model\cr
-#' \deqn{y_{gt} = \lambda_{g} Wy_{gt} + X_{gt} \beta_{g} + \epsilon_{gt}}
-#' SUR-SEM: Spatial error model\cr
-#' \deqn{y_{gt} = X_{gt} \beta_{g} + u_{gt} ; u_{gt} = \rho_{g} Wu_{gt} + \epsilon_{gt}}
-#' SUR-SDM: Spatial Durbin model\cr
-#' \deqn{y_{gt} = \lambda_{g} Wy_{gt} + X_{gt} \beta_{g} + WX_{gt} \theta_{g} + \epsilon_{gt}}
-#' SUR-SDEM: Spatial Durbin error model\cr
-#' \deqn{y_{gt} = X_{gt} \beta_{g} + WX_{gt} \theta_{g} + u_{gt} ; u_{gt} = \rho_{g} W u_{gt} + \epsilon_{gt}}
-#' SUR-SARAR: Spatial autoregressive model with spatial autoregressive error term\cr
-#' \deqn{y_{gt} = \lambda_{g} Wy_{gt} + X_{gt} \beta_{g} + u_{gt} ; u_{gt} = \rho_{g} W u_{gt} + \epsilon_{gt}}
-#' where y_{gt}, u_{gt} and \eqn{\epsilon_{gt}} are (nRx1) vectors; X_{gt} is a matrix of exogenous variables of
-#' order (nRxsum(p)); \eqn{\lambda_g} and \eqn{\rho_g} are parametres of spatial dependence; W is a nRxnR matrix of spatial interactions.
-#' \cr
-#' @section 2.2 Three-Stage Least Squate estimation:
-#' The SUR-SAR and SUR-SDM could be estimate by 3sls using \code{\link{spsur3sls}}\cr
+#'   As indicated above, \pkg{spsur} package may work with a list of 
+#'   different spatial specifications.
+#'   They are the following:
+#'   \itemize{
+#'     \item \emph{SUR-SIM}: SUR model without spatial effects
+#'            \deqn{ y_{tg} =  X_{tg} \beta_{g} + \epsilon_{tg} }
+#'     \item \emph{SUR-SLX}: SUR model with spatial lags of the regresors
+#'            \deqn{ y_{tg} = X_{tg} \beta_{g} + 
+#'                            WX_{tg} \theta_{g} + \epsilon_{tg} }
+#'     \item \emph{SUR-SLM}: SUR model with spatial lags of the endogenous
+#'            \deqn{y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + 
+#'                           \epsilon_{tg} }
+#'      \item \emph{SUR-SEM}: SUR model with spatial errors
+#'             \deqn{ y_{tg} = X_{tg} \beta_{g} + u_{tg} }
+#'             \deqn{ u_{tg} = \lambda_{g} Wu_{tg} + \epsilon_{tg} }
+#'      \item \emph{SUR-SDM}: SUR model with spatial lags of the endogenous 
+#'            variable and of the regressors or Spatial Durbin model
+#'            \deqn{ y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + 
+#'                             WX_{tg} \theta_{g} + \epsilon_{tg} }
+#'      \item \emph{SUR-SDEM}: SUR model with spatial errors and spatial 
+#'            lags of the endogenous variable and of the regressors
+#'             \deqn{ y_{tg} = X_{tg} \beta_{g} + WX_{tg} \theta_{g} + u_{tg} }
+#'              \deqn{ u_{tg} = \lambda_{g} W u_{tg} + \epsilon_{tg} }
+#'      \item \emph{SUR-SARAR}: Spatial lag model with spatial errors
+#'             \deqn{ y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + 
+#'                              u_{tg} }
+#'              \deqn{ u_{tg} = \lambda_{g} W u_{tg} + \epsilon_{tg} }
+#'      \item \emph{SUR-GNM}: SUR model with spatial lags of the explained 
+#'        variables, regressors and spatial errors
+#'       \deqn{ y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + 
+#'                         WX_{tg} \theta_{g} + u_{tg} }
+#'       \deqn{ u_{tg} = \lambda_{g} W u_{tg} + \epsilon_{tg} }
+#'    }
+#'          where \eqn{y_{tg}}, \eqn{u_{tg}} and \eqn{\epsilon_{tg}} are 
+#'          \emph{(Nx1)} vectors; \eqn{X_{tg}} is a matrix of regressors of 
+#'          order \emph{(NxP)}; \eqn{\rho_{g}} and \eqn{\lambda_{g}} are 
+#'          parameters of spatial dependence and \emph{W} is the
+#'          \emph{(NxN)} spatial weighting matrix.
+#'
+#'         These specifications can be estimated by maximum-likelihood 
+#'         methods, using the function \code{\link{spsurml}}. Moroever, 
+#'         the models that include spatial lags of the explained
+#'         variables in the right hand side of the equations, and the 
+#'         errors are assumed to be spatially incorrelated (namely, the 
+#'         SUR-SLM and the SUR-SDM), can also be estimated using
+#'         three-stage least-squares, \code{\link{spsur3sls}}, 
+#'         using spatial instrumental variable to correct for the problem of
+#'         endogeneity present in these cases.
 #'
 #' @section 3. Diagnostic tests:
-#' Several diagnostic tests could be calculate to looking for the corect specification:\cr
+#'   Testing for inconsistencies or misspecifications in the results of an 
+#'   estimated (SUR) model should be a primary task for the user. \pkg{spsur} 
+#'   focuses, especifically, on two main question such as omitted
+#'   or wrongly specified spatial structure and the existence of structural 
+#'   breaks or relevant restrictions
+#'   in the parameters of the model. In this sense, the user will find:
 #'
-#' @section 3.1 Marginal test:
-#' The Marginal Multiplier tests are used to test for no correlation in one part of the model allowing for spatial correlation in the other.
-#' The LM(LM(\eqn{\rho}|\eqn{\lambda})) is the test for sustantive spatial autocorrelation in a model with spatial autocorrelation
-#' in error term (SUR-SEM; SUR-SDM;SUR-SDEM).
-#' The LM(\eqn{\lambda}|\eqn{\rho}) is the test for spatial error correlation in a model with sustanative spatial correlation (SUR-SAR).\cr
+#'  \enumerate{
+#'    \item \emph{Marginal tests} \cr
+#'      The Marginal Multipliers test for omitted or wrongly specified spatial 
+#'      structure in the equations. They are routinely part of the output of 
+#'      the maximum-likelihood estimation, shown by \code{\link{spsurml}}. 
+#'      In particular, the LM(\eqn{\rho}|\eqn{\lambda}) tests for omitted 
+#'      spatial lags in a model specified with spatial errors (SUR-SEM; 
+#'      SUR-SDEM). The LM(\eqn{\lambda}|\eqn{\rho}) tests for omitted 
+#'      spatial error in a model specified with spatial lags
+#'      of the explained variable (SUR-SLM; SUR-SDM).
 #'
-#' @section 3.2 Coefficients stability:
-#' The Walt tests of coefficent stability (or equity) could be calculate for beta coefficients \code{\link{wald_betas}} or
-#' spatial autocorrelation coefficients \code{\link{wald_deltas}}
+#'    \item \emph{Coefficients stability tests} \cr
+#'      \pkg{spsur} includes two functions designed to test for linear 
+#'       restrictions on the \eqn{\beta} coefficients of the models and on 
+#'       the spatial coefficients (\eqn{\rho}s and \eqn{\lambda}s terms). 
+#'       The function for the first case is \code{\link{wald_betas}} and
+#'      \code{\link{wald_deltas}} that of the second case. The user has 
+#'      ample flexibility to define different forms of linear restrictions, 
+#'      so that it is possible, for example,
+#'      to test for their time constancy to identify structural breaks.
+#'  }
 #'
 #' @section 4. Marginal effects:
-#' The marginal effects \code{\link{impacts}} of spatial autoregressive models (SAR; SDM; SARAR) has been calculated
-#' following the propose of LeSage and Pace (2009)
+#'   In recent years, since the publication of LeSage and Pace (2009), 
+#'   it has become popular in
+#'   spatial econometrics to evaluate the multiplier effects that a change in 
+#'   the value of a regressor, in a point in the space, has on the explained 
+#'   variable. \pkg{spsur} includes a function, \code{\link{impacts}}, 
+#'   that computes these effects. Specifically, \code{\link{impacts}} obtains
+#'   the average, over the \emph{N} spatial units and \emph{Tm} time periods, 
+#'   of such a change on the contemporaneous value of the explained variable 
+#'   located in the same point as the modified variable. This is the 
+#'   so-called \emph{Average Direct effect}. The \emph{Average Indirect 
+#'   effect} measure the proportion of the impact that spills-over to other 
+#'   locations. The sum of the two effects is the \emph{Average Total effect}. 
+#'   \cr
+#'   These estimates are complemented with a measure of statistical 
+#'   significance, following the randomization approach suggested by 
+#'   LeSage and Pace (2009).
 #'
-#' @section Dataset:
-#' This package comes with three different datasets: spc; NAT; Unemployment
+#' @section 5. Additional functionalities:
+#'   A particular feature of \pkg{spsur} is that the package allows to 
+#'   obtain simulated datasets with a SUR nature and the spatial structure 
+#'   decided by the user. This is the purpose of the function 
+#'   \code{\link{dgp_spsur}}. The function can be inserted into a more 
+#'   general code to solve, for example, Monte Carlo studies related to 
+#'   these type of models or, simply, to show some of the stylized 
+#'   characteristics of a SUR model with certain spatial structure.
+#'
+#' @section Datasets:
+#'   \pkg{spsur} includes three different datasets: spc, NCOVR and spain.covid. These 
+#'   sets are used to 
+#'   illustrate the capabilities of different functions. Briefly, their 
+#'   main characteristics are the following \cr
+#'   \itemize{
+#'     \item The \emph{spc} dataset (Spatial Phillips-Curve) is a 
+#'      classical dataset taken from Anselin (1988, p. 203), of small 
+#'      dimensions.
+#'      \item The \emph{NCOVR} dataset comprises Homicides and a list of 
+#'      selected socio-economic variables for continental U.S. counties 
+#'      in four decennial census years: 1960, 1970, 1980 and 1990. 
+#'      It is freely available from
+#'        \url{https://geodacenter.github.io/data-and-lab/ncovr/}. 
+#'        \emph{NCOVR} is a typical spatial panel dataset \emph{(G=1)}.
+#'      \item The \emph{spain.covid} dataset comprises Within and Exit mobility index 
+#'      together with the weeklly incidence COVID-19 at Spain provinces from 
+#'      February 21 to May 21 2020. 
+#'      \url{https://www.mitma.gob.es/ministerio/covid-19/evolucion-movilidad-big-data}
+#'    }
 #'
 #' @references
+#'   \itemize{
+#'     \item Breusch T, Pagan A (1980). The Lagrange multiplier test
+#'       and its applications to model specification in econometrics.
+#'       \emph{Review of Economic Studies} 47: 239-254.
 #'
-#' Breusch T, Pagan A (1980) The Lagrange multiplier test and its applications to model specification in
-#'  econometrics. \emph{Rev Econ Stud} 47: 239-254\cr
-#'  \cr
-#' Mur, J., Lopez, F., and Herrera, M. (2010). Testing for spatial effects in seemingly unrelated regressions. \emph{Spatial Economic Analysis}, 5(4), 399-440.
-#' \cr
-#' \cr
-#' Lopez, F.A., Mur, J., and Angulo, A. (2014). Spatial model selection strategies in a SUR framework. The case of regional productivity in EU. \emph{Annals of Regional Science}, 53(1), 197-220.
-#' \cr
-#' \cr
-#' LeSage, J., and Pace, R. K. (2009). Introduction to spatial econometrics. Chapman and Hall/CRC.
+#'      \item LeSage, J., and Pace, R. K. (2009). \emph{Introduction to
+#'        spatial econometrics}. Chapman and Hall/CRC.
+#'
+#'      \item Lopez, F.A., Mur, J., and Angulo, A. (2014). Spatial model
+#'        selection strategies in a SUR framework. The case of regional
+#'        productivity in EU. \emph{Annals of Regional Science},
+#'        53(1), 197-220.
+#'
+#'      \item López, F.A., Martínez-Ortiz, P.J., and Cegarra-Navarro, J.G.
+#'        (2017). Spatial spillovers in public expenditure on a municipal
+#'        level in Spain. \emph{Annals of Regional Science}, 58(1), 39-65.
+#'
+#'      \item Mur, J., López, F., and Herrera, M. (2010). Testing for spatial
+#'        effects in seemingly unrelated regressions. \emph{Spatial Economic
+#'        Analysis}, 5(4), 399-440.
+#'   }
 #'
 #' @author
 #'   \tabular{ll}{
-#'   Fernando López  \tab \email{fernando.lopez@upct.es} \cr
-#'   Román Mínguez  \tab \email{roman.minguez@uclm.es} \cr
-#'   Jesús Mur  \tab \email{jmur@unizar.es} \cr
+#'   Fernando López  \tab \email{fernando.lopez@@upct.es} \cr
+#'   Román Mínguez  \tab \email{roman.minguez@@uclm.es} \cr
+#'   Jesús Mur  \tab \email{jmur@@unizar.es} \cr
 #'   }
+#'
+#' @importFrom Formula Formula model.part
+#' @importFrom gmodels estimable
+#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 geom_pointrange
+#' @importFrom ggplot2 labs
+#' @importFrom gridExtra grid.arrange
+#' @importFrom MASS ginv
+#' @importFrom Matrix bdiag crossprod Diagonal Matrix solve t
+#' @importFrom methods as
+#' @importFrom minqa bobyqa
+#' @importFrom numDeriv hessian
+#' @importFrom rlang .data
+#' @importFrom sparseMVN rmvn.sparse
+#' @importFrom spatialreg get.ZeroPolicyOption create_WX trW  
+#' @importFrom spatialreg can.be.simmed jacobianSetup do_ldet 
+#' @importFrom spatialreg impacts intImpacts anova.sarlm 
+#' @importFrom spdep knearneigh knn2nb nb2mat
+#' @importFrom spdep card mat2listw invIrW
+#' @importFrom stats cor cov optim pchisq pnorm pt qnorm rnorm runif
+#' @importFrom stats coefficients fitted lm residuals printCoefmat
+#' @importFrom stats model.frame model.matrix terms
+#' @importFrom stats anova coef formula logLik AIC BIC
+#' @importFrom stats na.action napredict update
 NULL

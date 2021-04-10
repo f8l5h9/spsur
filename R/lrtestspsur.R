@@ -1,162 +1,141 @@
 #' @name lrtestspsur
 #' @rdname lrtestspsur
 #'
-#' @title Likelihood ratio test
+#' @title Likelihood Ratio tests for the specification of spatial SUR models.
 #'
+#' @description The function computes a set of Likelihood Ratio tests, LR, 
+#'  that help the user to select the spatial structure of the SUR model. 
+#'  To achieve this goal, \code{\link{lrtestspsur}}
+#'  needs to estimate the nested SUR models (options: "sim", "slx", "slm", 
+#'  "sem", "sdm", "sdem", and "sarar"), using the function 
+#'  \code{\link{spsurml}}.
 #'
-#' @description
-#' The function report serveral LR tests
+#'  The nested models listed above are compared using ANOVA tables and 
+#'  LR tests. 
+#'  
+#' @usage lrtestspsur (objectr,  objectu = NULL)
+#'  
+#' @param objectr An \code{spsur} object created by \code{\link{spsurml}},
+#'            \code{\link{spsur3sls}} or \code{\link{spsurtime}}. 
+#' @param objectu An \code{spsur} object created by \code{\link{spsurml}},
+#'            \code{\link{spsur3sls}} or \code{\link{spsurtime}} which
+#'            nests \code{objectr}. Default = \code{NULL}
 #'
-#' @param    nT     : Number of time periods
-#' @param    nG     : number of equations
-#' @param    nR     : number of spatial observations
-#' @param    Y       : Data vector R*Tx1 (firs space, second time)
-#' @param    X       : Data matrix R*TxK (K is a vector ...)
-#' @param    W       : A RxR spatial weight matrix.
+#' @details  A fundamental result in maximum-likelihood estimation shows that 
+#' if \emph{model A} is nested in \emph{model B}, by a set of \emph{n} 
+#' restrictions on the parameters of \emph{model B}, then,
+#' as the sample size increases, the test statistic: 
+#' \emph{\eqn{-2log[l(H_{0}) / l(H_{A})]}}
+#' is a \eqn{\chi^{2}(n)}, being l(H_{0} the estimated likelihood under 
+#' the null hypothesis (\emph{model A}) and l(H_{A} the estimated likelihood 
+#' under the alternative hypothesis (\emph{model B}).
 #'
-#' @return
-#' The LR tests
+#'  The list of (spatial) models that can be estimated with the function 
+#'  \code{\link{spsurml}} includes the following (in addition to the 
+#'  "slx" and "sdem"):
 #'
-#' @details
-#' The SUR models
-#' Various tests of spatial autocorrelation are obtain based on the principle of the Lagrange Multiplier in a maximum-likelihood framework.
+#'  \itemize{
+#'     \item "sim": SUR model with no spatial effects
+#'       \deqn{ y_{tg} = X_{tg} \beta_{g} + \epsilon_{tg} }
+#'     \item "slm": SUR model with spatial lags of the explained variables
+#'       \deqn{y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + \epsilon_{tg} }
+#'     \item "sem": SUR model with spatial errors
+#'       \deqn{ y_{tg} = X_{tg} \beta_{g} + u_{tg} }
+#'       \deqn{ u_{tg} = \lambda_{g} Wu_{tg} + \epsilon_{tg} }
+#'     \item "sdm": SUR model of the Spatial Durbin type
+#'       \deqn{ y_{tg} = \rho_{g} Wy_{tg} + X_{tt} \beta_{g} + WX_{tg} \theta_{g} + \epsilon_{tg} }
+#'     \item "sarar": SUR model with spatial lags of the explained variables and spatial
+#'       errors
+#'       \deqn{ y_{tg} = \rho_{g} Wy_{tg} + X_{tg} \beta_{g} + u_{tg} }
+#'       \deqn{ u_{tg} = \lambda_{g} W u_{tg} + \epsilon_{tg} }
+#'   }
+#'   This collection of models can be compared, on objective bases, using the LR principle  and the
+#'    following  nesting relations:
 #'
-#' W is a spatial weights matrix
+#'   \itemize{
+#'     \item  "sim" vs either "slx",  slm", "sem", "sdm", "sarar"
+#'     \item  "slm" vs either  "sdm", "sarar"
+#'     \item  "sem" vs either  "sdm", "sdem", "sarar"
+#'     \item  "slx" vs either  "sdm", "sdem"
+#'   }
+#'
+#' @return Object of \code{anova} class including, the list of models and, 
+#'  for each model, the logLik, degrees of freedom and AIC. 
+#'  If two nested models have been included as arguments, 
+#'  the corresponding LR-test and its p-value associated.
+#'   
+#'
+#' @author
+#'   \tabular{ll}{
+#'   Fernando López  \tab \email{fernando.lopez@@upct.es} \cr
+#'   Román Mínguez  \tab \email{roman.minguez@@uclm.es} \cr
+#'   Jesús Mur  \tab \email{jmur@@unizar.es} \cr
+#'   }
 #'
 #' @references
-#' López, F.A., Mur, J., & Angulo, A. (2014). Spatial model selection strategies in a SUR framework. The case of regional productivity in EU. The Annals of Regional Science, 53(1), 197-220.
-#' @seealso
-#' \code{\link{spsurml}}
-#' 
-#' @examples
+#'   \itemize{
+#'     \item Mur, J., López, F., and Herrera, M. (2010). Testing for spatial
+#'       effects in seemingly unrelated regressions.
+#'       \emph{Spatial Economic Analysis}, 5(4), 399-440.
+#'      \item López, F.A., Mur, J., and Angulo, A. (2014). Spatial model
+#'        selection strategies in a SUR framework. The case of regional
+#'        productivity in EU. \emph{Annals of Regional Science}, 53(1),
+#'        197-220.
+#'   }
 #'
-#' data(Sar)
-#' nT <- 4 # Number of periods
-#' nG <- 3 # Number equations
-#' nR <- ncol(Ws)
-#' lrtestspsur(W=Ws,X=XXsar,Y=Ysar,nG=nG,nR=nR,nT=nT)
-
-#' ########################################################################
-#' ##########     TEMPORAL CORRELATIONS (nG = 1 and nT > 1)     ###########
-#' ########################################################################
-#' data("unemp_it_short") 
-#' data("W_italy")
-#' form_un <- unrate  ~ empgrowth + partrate + agri + cons + serv
-#' lr_time <- lrtestspsur(Form=form_un,data=unemp_it,time=unemp_it$year,W=W_italy)
+#' @seealso
+#' \code{\link{spsurml}}, \code{\link{lmtestspsur}}
+#'
+#' @examples
+#' #################################################
+#' ######## CROSS SECTION DATA (nG=1; nT>1) ########
+#' #################################################
+#'
+#' #### Example 1: Spatial Phillips-Curve. Anselin (1988, p. 203)
+#' rm(list = ls()) # Clean memory
+#' data("spc", package = "spsur")
+#' lwspc <- spdep::mat2listw(Wspc, style = "W")
+#' Tformula <- WAGE83 | WAGE81 ~ UN83 + NMR83 + SMSA | UN80 + NMR80 + SMSA
+#' spcsur.slm <- spsurml(formula = Tformula, data = spc, 
+#'                       type = "slm", listw = lwspc)
+#' ## ANOVA Table SLM model
+#' lrtestspsur(spcsur.slm)    
+#' ## Test ANOVA SIM versus SLM
+#' spcsur.sim <- spsurml(formula = Tformula, data = spc, 
+#'                       type = "sim", listw = lwspc)
+#' lrtestspsur(spcsur.sim, spcsur.slm)
 #' 
-lrtestspsur <- function(Form=NULL,data=NULL,W=NULL,
-                         X=NULL,Y=NULL,time=NULL,
-                         nG=NULL,nR=NULL,nT=NULL)
-{
-  ## PURPOSE:
-  # Realiza todos los test LR.
-  if (is.null(W) && !type=="sim") stop("W matrix is needed")
-  if (!is.null(W)) W <- Matrix::Matrix(W)
-  if (is.null(time)){  # nG > 1 (no temporal correlations are modelled)
-    if(!is.null(Form) && !is.null(data)){
-      # Lectura datos
-      if (!class(Form) == "Formula") Form <- Formula::Formula(Form) 
-      get_XY <- get_data_spsur(formula=Form,data=data,W=W)
-      Y <- get_XY$Y
-      X <- get_XY$X
-      nG <- get_XY$nG
-      nR <- get_XY$nR
-      nT <- get_XY$nT
-      p <- get_XY$p
-      rm(get_XY)
-    }
-  } else { #nG = 1 and nT > 1 (temporal correlations are modelled)
-    if (class(time) != "factor") time <- as.factor(time)
-    time <- droplevels(time)
-    if (length(time) != nrow(data)) stop("time must have same length than the
-                                         number of rows in data")
-    mt <- terms(Form)
-    nG <- length(levels(time))
-    Ylist <- vector("list",nG)
-    Xlist <- vector("list",nG)
-    p <- NULL
-    namesX <- NULL
-    levels_time <- levels(time)
-    for (i in 1:nG) {
-      data_i <- model.frame(mt,data=data[time==levels_time[i],])
-      Ylist[[i]] <- data_i[,1]
-      Xlist[[i]] <- model.matrix(mt,data=data[time==levels_time[i],])
-      p <- c(p,ncol(Xlist[[i]]))
-      namesX <- c(namesX,paste(colnames(Xlist[[i]]),i,sep="_"))
-    }
-    Y <- matrix(unlist(Ylist),ncol=1)
-    X <- as.matrix(Matrix::bdiag(Xlist))
-    colnames(X) <- namesX
-    nR <- length(Ylist[[1]]); nT <- 1    
-  }  
-
-  ## Lik modelo SIM
-  model_sim <- fit_spsursim(nT=nT,nG=nG,nR=nR,
-                            Y=Y,X=X,W=W,trace=FALSE)
-  llsur_sim <- model_sim$llsur
-
-  ## Lik modelo SAR
-  model_sar <- fit_spsursar(nT=nT,nG=nG,nR=nR,
-                            Y=Y,X=X,W=W,trace=FALSE)
-  llsur_sar <- model_sar$llsur
-
-  ## Lik modelo SEM
-  model_sem <- fit_spsursem(nT=nT,nG=nG,nR=nR,
-                            Y=Y,X=X,W=W,trace=FALSE)
-  llsur_sem <- model_sem$llsur
-
-  ## Lik modelo SARAR
-  model_sarar <- fit_spsursarar(nT=nT,nG=nG,nR=nR,
-                                Y=Y,X=X,W=W,trace=FALSE)
-  llsur_sarar <- model_sarar$llsur
-
-  lr_sim_sar <- -2*(llsur_sim - llsur_sar)
-  pval_lr_sim_sar <- pchisq(lr_sim_sar,df=nG,
-                            lower.tail=FALSE)
-  lr_sim_sem <- -2*(llsur_sim - llsur_sem)
-  pval_lr_sim_sem <- pchisq(lr_sim_sem,df=nG,
-                            lower.tail=FALSE)
-
-  lr_sim_sarar <- -2*(llsur_sim - llsur_sarar)
-  pval_lr_sim_sarar <- pchisq(lr_sim_sarar,df=2*nG,
-                            lower.tail=FALSE)
-
-  lr_sar_sarar <- -2*(llsur_sar - llsur_sarar)
-  pval_lr_sar_sarar <- pchisq(lr_sar_sarar,df=nG,
-                              lower.tail=FALSE)
-  lr_sem_sarar <- -2*(llsur_sem - llsur_sarar)
-  pval_lr_sem_sarar <- pchisq(lr_sem_sarar,df=nG,
-                              lower.tail=FALSE)
-
-  cat("LR test SIM-SAR: \n")
-  cat("statistic: ",round(lr_sim_sar,3),
-      " p-value: ",round(pval_lr_sim_sar,3),"\n\n")
-  cat("LR test SIM-SEM: \n")
-  cat("statistic: ",round(lr_sim_sem,3),
-      " p-value: ",round(pval_lr_sim_sem,3),"\n\n")
-  cat("LR test SIM-SARAR: \n")
-  cat("statistic: ",round(lr_sim_sarar,3),
-      " p-value: ",round(pval_lr_sim_sarar,3),"\n\n")
-  cat("LR test SAR-SARAR: \n")
-  cat("statistic: ",round(lr_sar_sarar,3),
-      " p-value: ",round(pval_lr_sar_sarar,3),"\n\n")
-  cat("LR test SEM-SARAR: \n")
-  cat("statistic: ",round(lr_sem_sarar,3),
-      " p-value: ",round(pval_lr_sem_sarar,3),"\n\n")
-
-  res <- list(lr_sim_sar = lr_sim_sar,
-              pval_lr_sim_sar=pval_lr_sim_sar,
-              lr_sim_sem = lr_sim_sem,
-              pval_lr_sim_sem = pval_lr_sim_sem,
-              lr_sim_sarar  = lr_sim_sarar,
-              pval_lr_sim_sarar = pval_lr_sim_sarar,
-              lr_sar_sarar = lr_sar_sarar,
-              pval_lr_sar_sarar = pval_lr_sar_sarar,
-              lr_sem_sarar = lr_sem_sarar,
-              pval_lr_sem_sarar = pval_lr_sem_sarar
-              )
- res
+#' ## VIP: If you want to examine a particular example eliminate '#' and 
+#' ## execute the code of the example (they have been commented to 
+#' ## pass the checking time in CRAN)
+#' 
+#' ## VIP: The output of the whole set of the examples can be examined 
+#' ## by executing demo(demo_lrtestspsur, package="spsur")
+#' 
+#' ## Test ANOVA SLM vs SDM
+#' #spcsur.sdm <- spsurml(formula = Tformula, data = spc, 
+#' #                      type = "sdm", listw = lwspc)
+#' #lrtestspsur(spcsur.slm, spcsur.sdm)
+#' ## Test ANOVA SEM vs SDM
+#' #spcsur.sem <- spsurml(formula = Tformula, data = spc, 
+#' #                      type = "sem", listw = lwspc)
+#' #lrtestspsur(spcsur.sem, spcsur.sdm)
+#' @export
+lrtestspsur <- function(objectr,  objectu = NULL) {
+  # LR tests of model specification.
+  class(objectr) <- "sarlm" ## ANOVA for sarlm class
+  if(is.null(objectu)) {
+    anova_table <- spatialreg::anova.sarlm(objectr)
+    attr(anova_table, "row.names") <- paste(objectr$type,
+                                    "model", sep = " ")
+  } else {
+    class(objectu) <- "sarlm"
+    anova_table <- spatialreg::anova.sarlm(objectr, objectu)
+    attr(anova_table, "row.names") <- c(paste(objectr$type,
+                                        "model", sep = " "),
+                                        paste(objectu$type,
+                                        "model", sep = " "))
+  }
+  res <- anova_table
+  res
 }
-
-
-

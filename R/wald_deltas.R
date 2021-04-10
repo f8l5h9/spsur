@@ -1,94 +1,165 @@
 #' @name wald_deltas
 #' @rdname wald_deltas
 #'
-#' @title Wald tests for spatial parameters coefficients
+#' @title Wald tests for spatial parameters coefficients.
 #'
 #' @description
-#' Wald tests for linear hypothesis about delta coefficients (spatial parameters)
+#'  Function \code{\link{wald_deltas}} obtains Wald tests for linear 
+#'  restrictions on the spatial coefficients of a SUR model that has been 
+#'  estimated previously through the function \code{\link{spsurml}}. The 
+#'  restrictions can affect to coefficients of the same equation
+#'  (i.e., \eqn{\lambda_{g}=\rho_{g} forall g}) or can involve coefficients 
+#'  from different equations (i.e., \eqn{\lambda_{g}=\lambda_{h}}). The 
+#'  function has great flexibility in this respect. Note that 
+#'  \code{\link{wald_deltas}} only works in a maximum-likelihood framework.
 #'
-#' @param    results : An object create with \code{\link[spSUR2]{spsurml}}.
-#' @param    R       : Coefficient matrix for deltas. 
-#' @param    r       : Vector of independent terms.
-#' 
-#' @details
-#' ¿?¿?
+#'  In order to work with \code{\link{wald_betas}}, the model on which the 
+#'  linear restrictions are to be tested needs to exists as an \emph{spsur} 
+#'  object. Using the information contained in the object, 
+#'  \code{\link{wald_deltas}} obtains the corresponding Wald statistic for 
+#'  the null hypotheses specified by the user through the \emph{R} row vector 
+#'  and \emph{b} column vector discussed, used also in \code{\link{spsurml}}. 
+#'  The function shows the  resulting Wald test statistics and their 
+#'  corresponding p-values.
+#'  
+#' @usage wald_deltas (obj , R , b)
 #'
-#' @return
-#' statistics and p-value 
-#' 
-#' @references
-#' 
-#' CAMBIAR
-#' J. LeSage and R.K. Pace. \emph{Introduction to Spatial Econometrics}, CRC Press, chapter 10.1.6, 2009
-#' Mur, J., López, F., & Herrera, M. (2010). Testing for spatial effects in seemingly unrelated regressions. \emph{Spatial Economic Analysis}, 5(4), 399-440.
-#' \cr
-#' \cr
-#' López, F.A., Mur, J., & Angulo, A. (2014). Spatial model selection strategies in a SUR framework. The case of regional productivity in EU. \emph{Annals of Regional Science}, 53(1), 197-220.
-#' \cr
-#' \cr
-#' López, F.A., Martínez-Ortiz, P.J., & Cegarra-Navarro, J.G. (2017). Spatial spillovers in public expenditure on a municipal level in Spain. \emph{Annals of Regional Science}, 58(1), 39-65.
+#' @param obj An \code{spsur} object created by \code{\link{spsurml}},
+#'  \code{\link{spsur3sls}} or \code{\link{spsurtime}}.
+#' @param R A row vector of order \emph{(1xGr)} or \emph{(1x2Gr)} showing 
+#'  the set of \emph{r} linear constraints on the  spatial parameters. The 
+#'  last case is reserved to "sarar" models where there appear
+#'  \emph{G} parameters \eqn{\lambda_{g}} and \emph{G} parameters 
+#'  \eqn{\rho_{g}}, \emph{2G} spatial in total. The \emph{first} 
+#'  restriction appears in the first \emph{G} terms in \emph{R} 
+#'  (\emph{2G} for the "sarar" case),   the second restriction 
+#'  in the next \emph{G} terms (\emph{2G} for the
+#'  "sarar" case) and so on. 
+#' @param  b A column vector of order \emph{(rx1)} with the values 
+#'  of the linear restrictions on the \eqn{\beta} parameters. 
 #'
+#' @return Object of \code{htest} including the Wald
+#'   statistic, the corresponding p-value, the degrees of
+#'   freedom and the values of the sample estimates.
+#'   
 #' @author
 #'   \tabular{ll}{
-#'   Fernando López  \tab \email{fernando.lopez@upct.es} \cr
-#'   Román Mínguez  \tab \email{Roman.Minguez@uclm.es} \cr
-#'   Jesus Mur  \tab \email{jmur@unizar.es} \cr
+#'   Fernando López  \tab \email{fernando.lopez@@upct.es} \cr
+#'   Román Mínguez  \tab \email{roman.minguez@@uclm.es} \cr
+#'   Jesús Mur  \tab \email{jmur@@unizar.es} \cr
 #'   }
+#'
 #' @seealso
-#' \code{\link{spsurml}}
+#'  \code{\link{spsurml}}, \code{\link{spsur3sls}}
 #' @examples
-#' data(spc)
+#'
+#' #################################################
+#' ######## CROSS SECTION DATA (G>1; Tm=1) ########
+#' #################################################
+#' rm(list = ls()) # Clean memory
+#' data(spc, package = "spsur")
+#' lwspc <- spdep::mat2listw(Wspc, style = "W")
 #' Tformula <- WAGE83 | WAGE81 ~ UN83 + NMR83 + SMSA | UN80 + NMR80 + SMSA
-#' ################################# 
-#' ## Estimate SUR-SAR model 
-#' spcSUR.sar <-spsurml(Form=Tformula,data=spc,type="sar",W=Wspc)
-#' summary(spcSUR.sar)
-#' ## H_0: equality between lambda parameters in both equations. 
-#' R1 <- matrix(c(1,-1),nrow=1)
-#' r1 <- matrix(0,ncol=1)
-#' res1 <- wald_deltas(results=spcSUR.sar,R=R1,r=r1)
-#' res1$stat; res1$p_val    
+#'
 #' #################################
-#' ## Estimate SUR-SEM model 
-#' spcSUR.sem <-spsurml(Form=Tformula,data=spc,type="sem",W=Wspc)
-#' summary(spcSUR.sem)
-#' ## H_0: equality between delta parameters in both equations. 
-#' R2 <- matrix(c(1,-1),nrow=1)
-#' r2 <- matrix(0,ncol=1)
-#' res2 <- wald_deltas(results=spcSUR.sem,R=R2,r=r2)
-#' res2$stat; res2$p_val    
-#' ################################# 
-#' ## Estimate SUR-SARAR model 
-#' spcSUR.sarar <-spsurml(Form=Tformula,data=spc,type="sarar",W=Wspc)
-#' summary(spcSUR.sarar)
-#' ## H_0: equality between lambda and delta parameters in both equations. 
-#' R3 <- matrix(c(1,-1,0,0,0,0,1,-1),nrow=2,ncol=4,byrow=TRUE)
-#' r3 <- matrix(c(0,0),ncol=1)
-#' res3 <- wald_deltas(results=spcSUR.sarar,R=R3,r=r3)
-#' res3$stat; res3$p_val    
-
-
-wald_deltas <- function(results , R , r){
-  z <- results # OBJETO QUE INCLUYE ESTIMACIÓN EN Rbetas <- z$betas
-  deltas <- Matrix::Matrix(matrix(z$deltas,ncol=1))
+#' ## Estimate SUR-SLM model
+#' spcsur.slm <-spsurml(formula = Tformula, data = spc, 
+#'                        type = "slm", listw = lwspc)
+#' summary(spcsur.slm)
+#' ## H_0: equality of the lambda parameters of both equations.
+#' R1 <- matrix(c(1,-1), nrow=1)
+#' b1 <- matrix(0, ncol=1)
+#' wald_deltas(spcsur.slm, R = R1, b = b1)
+#' 
+#' 
+#' ## VIP: The output of the whole set of the examples can be examined 
+#' ## by executing demo(demo_wald_deltas, package="spsur")
+#' 
+#' \donttest{
+#' #################################
+#' ### Estimate SUR-SEM model
+#' spcsur.sem <-spsurml(form = Tformula, data = spc, 
+#'                      type = "sem", listw = lwspc)
+#' summary(spcsur.sem)
+#' ### H_0: equality of the rho parameters of both equations.
+#' R2 <- matrix(c(1,-1), nrow=1)
+#' b2 <- matrix(0, ncol=1)
+#' wald_deltas(spcsur.sem, R = R2, b = b2)
+#'
+#' ##################################
+#' ### Estimate SUR-SARAR model
+#' ### It usually requires 2-3 minutes maximum
+#' spcsur.sarar <-spsurml(formula = Tformula, data = spc,
+#'                        type = "sarar", listw = lwspc,
+#'                        control = list(tol=0.1))
+#' summary(spcsur.sarar)
+#' ### H_0: equality of the lambda and rho parameters of both equations.
+#' R3 <- matrix(c(1,-1,0,0,0,0,1,-1), nrow=2, ncol=4, byrow=TRUE)
+#' b3 <- matrix(c(0,0), ncol=1)
+#' wald_deltas(spcsur.sarar, R = R3, b = b3)
+#'
+#' #####################################
+#' #########  G=1; Tm>1         ########
+#' #####################################
+#'
+#' ##' ##### Example 2: Homicides + Socio-Economics (1960-90)
+#' rm(list = ls()) # Clean memory
+#' ### Read NCOVR.sf object
+#' data(NCOVR, package = "spsur")
+#' nbncovr <- spdep::poly2nb(NCOVR.sf, queen = TRUE)
+#' ### Some regions with no links...
+#' lwncovr <- spdep::nb2listw(nbncovr, style = "W", zero.policy = TRUE)
+#' Tformula <- HR80  | HR90 ~ PS80 + UE80 | PS90 + UE90
+#'
+#' ##################################
+#' ### A SUR-SLM model
+#' NCOVRSUR.slm <-spsurml(formula = Tformula, data = NCOVR.sf, 
+#'                        type = "slm", listw = lwncovr,
+#'                        method = "Matrix", zero.policy = TRUE, 
+#'                        control = list(fdHess = TRUE))
+#' summary(NCOVRSUR.slm)
+#' ### H_0: equality of the lambda parameters of both equations.
+#' R1 <- matrix(c(1,-1), nrow=1)
+#' b1 <- matrix(0, ncol=1)
+#' wald_deltas( NCOVRSUR.slm, R = R1, b = b1)
+#'
+#' ##################################
+#' ### Estimate SUR-SEM model
+#' NCOVRSUR.sem <-spsurml(formula = Tformula, data = NCOVR.sf, 
+#'                        type = "sem", listw = lwncovr,
+#'                        method = "Matrix", zero.policy = TRUE, 
+#'                        control = list(fdHess = TRUE))
+#' summary(NCOVRSUR.sem)
+#' ### H_0: equality of the rho parameters of both equations.
+#' R2 <- matrix(c(1,-1), nrow=1)
+#' b2 <- matrix(0, ncol=1)
+#' wald_deltas(NCOVRSUR.sem, R = R2, b = b2)
+#' }
+#' @export
+wald_deltas <- function(obj , R , b){
+  z <- obj 
+  deltas <- Matrix::Matrix(matrix(z$deltas, ncol = 1))
   rownames(deltas) <- names(z$deltas)
-  cov_deltas <- Matrix::Matrix(z$cov[rownames(deltas),rownames(deltas)])
+  cov_deltas <- Matrix::Matrix(z$resvar[rownames(deltas),
+                                        rownames(deltas)])
   R <- Matrix::Matrix(R)
-  colnames(R) <- rownames(deltas)
-  r <- Matrix::Matrix(matrix(r,ncol=1))
-  holg <- R %*% deltas - r
-  q <- nrow(as.matrix(R))
-  Wald <- as.numeric(Matrix::t(holg) %*% 
-                    Matrix::solve(R %*% cov_deltas %*% Matrix::t(R),holg)  ) 
-  p_val <- pchisq(Wald,df=q,lower.tail=FALSE)
-  cat("\n R: "); print(as.matrix(R))
-  cat("\n r: "); print(as.matrix(r))
-  cat("\n statistical discrepancies: "); print(as.matrix(holg))
-  cat("\n Wald stat.: ",round(Wald,3)," p-value (",p_val,")")
-  res <- list(stat = Wald,
-              p_val = p_val,
-              q = q,
-              R = as.matrix(R),
-              r = as.matrix(r),
-              discr = as.matrix(holg) )
-}  
+  b <- Matrix::Matrix(matrix(b,ncol=1))
+  holg <- (R %*% deltas) - b
+  parameter <- nrow(as.matrix(R))
+  attr(parameter, "names") <- "df"
+  statistic <- as.numeric(Matrix::t(holg) %*%
+                 Matrix::solve(R %*% cov_deltas %*% 
+                                 Matrix::t(R),holg)  )
+  attr(statistic, "names") <- "Wald test"
+  method <- paste("Wald test on spatial delta parameters")
+  p.value <- pchisq(statistic, df = parameter, 
+                    lower.tail = FALSE)
+  estimate <- as.numeric(deltas)
+  names(estimate) <- rownames(deltas)
+  data.name <- z$call[[3]]
+  res <- list(statistic = statistic, parameter = parameter, 
+              p.value = p.value, # estimate = estimate, 
+              method = method, data.name = data.name)
+  class(res) <- "htest"
+  res  
+}

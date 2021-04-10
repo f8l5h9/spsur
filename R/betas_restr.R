@@ -6,7 +6,7 @@
 # @description
 # Restricted estimation of beta coefficients
 #
-# @param    results : An object create with \code{\link[spSUR2]{spsurml}}.
+# @param    results : An object create with \code{\link{spsurml}}.
 # @param    R       : Coefficient matrix for betas.
 # @param    r       : Vector of independent terms.
 #
@@ -30,39 +30,39 @@
 #
 # @author
 #   \tabular{ll}{
-#   Fernando López  \tab \email{fernando.lopez@upct.es} \cr
-#   Román Mínguez  \tab \email{Roman.Minguez@uclm.es} \cr
-#   Jesus Mur  \tab \email{jmur@unizar.es} \cr
+#   Fernando Lopez  \tab \email{fernando.lopez@@upct.es} \cr
+#   Roman Minguez  \tab \email{roman.minguez@@uclm.es} \cr
+#   Jesus Mur  \tab \email{jmur@@unizar.es} \cr
 #   }
 # @seealso
 # \code{\link{spsur}}
 # @examples
 # data(spc)
 # Tformula <- WAGE83 | WAGE81 ~ UN83 + NMR83 + SMSA | UN80 + NMR80 + SMSA
-# ## Estimate SUR-SAR model
-# spcSUR.sar <-spsurml(Form=Tformula,data=spc,type="sar",W=Wspc)
-# summary(spcSUR.sar)
+# ## Estimate SUR-SLM model
+# spcsur.slm <-spsurml(Form=Tformula,data=spc,type="slm",W=Wspc)
+# summary(spcsur.slm)
 # ## H_0: equality between SMSA coefficients in both equations.
 # R1 <- matrix(c(0,0,0,1,0,0,0,-1),nrow=1)
 # r1 <- matrix(0,ncol=1)
-# wald_betas(results=spcSUR.sar,R=R1,r=r1)
-# betas_rest1 <- betas_restr(spcSUR.sar,R=R1,r=r1)
+# wald_betas(results=spcsur.slm,R=R1,r=r1)
+# betas_rest1 <- betas_restr(spcsur.slm,R=R1,r=r1)
 # ## Estimate SUR-SEM model
-# spcSUR.sem <-spsurml(Form=Tformula,data=spc,type="sem",W=Wspc)
-# summary(spcSUR.sem)
+# spcsur.sem <-spsurml(Form=Tformula,data=spc,type="sem",W=Wspc)
+# summary(spcsur.sem)
 # ## H_0: equality between intercepts and SMSA coefficients in both equations.
 # R2 <- matrix(c(1,0,0,0,-1,0,0,0,0,0,0,1,0,0,0,-1),nrow=2,ncol=8,byrow=TRUE)
 # r2 <- matrix(c(0,0),ncol=1)
-# res2 <- wald_betas(results=spcSUR.sem,R=R2,r=r2)
-# betas_rest2 <- betas_restr(spcSUR.sem,R=R2,r=r2)
+# res2 <- wald_betas(results=spcsur.sem,R=R2,r=r2)
+# betas_rest2 <- betas_restr(spcsur.sem,R=R2,r=r2)
 # ## Estimate SUR-SARAR model
-# spcSUR.sarar <-spsurml(Form=Tformula,data=spc,type="sarar",W=Wspc)
-# summary(spcSUR.sarar)
+# spcsur.sarar <-spsurml(Form=Tformula,data=spc,type="sarar",W=Wspc)
+# summary(spcsur.sarar)
 # ## H_0: equality between SMSA coefficients in both equations.
 # R3 <- matrix(c(0,0,0,1,0,0,0,-1),nrow=1)
 # r3 <- matrix(0,ncol=1)
-# wald_betas(results=spcSUR.sarar,R=R3,r=r3)
-# betas_rest3 <- betas_restr(spcSUR.sarar,R=R3,r=r3)
+# wald_betas(results=spcsur.sarar,R=R3,r=r3)
+# betas_rest3 <- betas_restr(spcsur.sarar,R=R3,r=r3)
 
 
 betas_restr <- function(results , R , r){
@@ -80,12 +80,12 @@ betas_restr <- function(results , R , r){
   W <- Matrix::Matrix(z$W)
   Sigma <- Matrix::Matrix(z$Sigma)
   Sigma_inv <- Matrix::solve(Sigma)
-  nT <- z$nT
-  nR <- z$nR
-  nG <- z$nG
-  IT <- Matrix::Diagonal(nT)
-  IR <- Matrix::Diagonal(nR)
-  IGR <- Matrix::Diagonal(nG*nR)
+  Tm <- z$Tm
+  N <- z$N
+  G <- z$G
+  IT <- Matrix::Diagonal(Tm)
+  IR <- Matrix::Diagonal(N)
+  IGR <- Matrix::Diagonal(G*N)
   OME <- kronecker(IT,kronecker(Sigma,IR))
   OMEinv <- kronecker(IT,kronecker(Sigma_inv,IR))
   type <- z$type
@@ -123,7 +123,7 @@ betas_restr <- function(results , R , r){
   rdf <- z$df.residual+q
   coef_table <- list(NULL)
   # Build coefficients table by Equation
-  for (i in 1:nG)
+  for (i in 1:G)
   {
     if(i==1){
       coef_table[[i]] <- cbind(betas_r[1:p[i]], se_betas_r[1:p[i]],
@@ -152,7 +152,7 @@ betas_restr <- function(results , R , r){
   cat("\n Betas Restricted: \n\n")
   for (i in 1:length(coef_table)){
     cat("Equation ",i,"\n")
-    printCoefmat(coef_table[[i]], P.value=TRUE, has.Pvalue=TRUE)
+    printCoefmat(coef_table[[i]], P.values = TRUE, has.Pvalue = TRUE)
   }
   res <- list(betas_restr = as.matrix(betas_r),
              cov_betas_restr = as.matrix(cov_betas_r),
