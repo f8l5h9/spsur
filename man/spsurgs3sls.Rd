@@ -102,8 +102,8 @@ Object of \code{spsur} class with the output of the  three-stages
     \code{N} \tab Number of cross-sections or spatial units. \cr
     \code{Tm} \tab Number of time periods. \cr
     \code{p} \tab Number of regressors by equation (including intercepts). \cr
-    \code{Y} \tab Vector \emph{Y} of the explained variables of the SUR model. \cr
-    \code{X} \tab Matrix \emph{X} of the regressors of the SUR model. \cr
+    \code{Y} \tab If \emph{data} is \emph{NULL}, vector \emph{Y} of the explained variables of the SUR model. \cr
+    \code{X} \tab If \emph{data} is \emph{NULL}, matrix \emph{X} of the regressors of the SUR model. \cr
     \code{W} \tab Spatial weighting matrix. \cr
     \code{zero.policy} \tab Logical value of \code{zero.policy} . \cr
     \code{listw_style} \tab	Style of neighborhood matrix \code{W}. \cr
